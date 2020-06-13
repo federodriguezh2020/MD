@@ -72,7 +72,6 @@ def simulate_triangular(op,ml,ps):
 
     # Si usan numpy.random, no son necesarias traducciones.
 
-
 def simulate_tasks_duration(project_graph):
     # TP1 TODO: Completar codigo
     # Esta funcion el grafo con n tareas, cada cual con sus parametros de la 
@@ -144,7 +143,7 @@ def main():
     # TODO TP1: Completar codigo
 
     # Fijamos la semilla, por reproducibilidad.
-    numpy.random.seed(777)
+    numpy.random.seed(777) # Nos gusta el 7 :)
 #    random.seed(777)
 
     # 300k por perder el deadline. Por ahora, 46.0
@@ -167,10 +166,13 @@ def main():
 #     print(get_project_duration(graph_no_hire, simulate_tasks_duration(graph_no_hire)))
 #     print(simulate(1000, graph_no_hire))
 # =============================================================================
-    print("Sin contratación:")
-    print("Probabilidad  de terminar en la semana 40 o antes: ", get_prob_in_range(simulate(100000, graph_no_hire), 0, incentive))
-    print("Probabilidad  de terminar entre la semana 40 y 47: ", get_prob_in_range(simulate(100000, graph_no_hire), incentive, deadline))
-    print("Probabilidad  de terminar luego de la semana 47: ", get_prob_in_range(simulate(100000, graph_no_hire), deadline, 100))
+    simulacion_no_hire = simulate(1000, graph_no_hire)
+    
+    # Grafico de la distribucion de las simulaciones:
+    plt.hist(simulacion_no_hire,density=True, color = "pink") 
+    plt.xlabel("Sin contratación")
+    
+    plt.show()
     
     # TODO: Analizar los resultados.
     ganancia = 5000000
@@ -178,14 +180,24 @@ def main():
     incentivo = 150000
     penalizacion = -300000
     
+    prob_menor_igual_cuarenta_no_hire = get_prob_in_range(simulacion_no_hire, 0, incentive)
+    prob_cuarenta_cuarentaysiete_no_hire = get_prob_in_range(simulacion_no_hire, incentive, deadline)
+    prob_mas_cuarentaysiete_no_hire = get_prob_in_range(simulacion_no_hire, deadline, 100)
+    
+    print("Sin contratación:")
+    print("Probabilidad  de terminar en la semana 40 o antes: ", prob_menor_igual_cuarenta_no_hire)
+    print("Probabilidad  de terminar entre la semana 40 y 47: ", prob_cuarenta_cuarentaysiete_no_hire)
+    print("Probabilidad  de terminar luego de la semana 47: ", prob_mas_cuarentaysiete_no_hire)
+  
     # Tabla de pagos sin contrataciones:
     matriz_no_hire = [(ganancia + incentivo), (ganancia), (ganancia + penalizacion)]
         
-    p_no_hire = [get_prob_in_range(simulate(100000, graph_no_hire), 0, incentive),
-                 get_prob_in_range(simulate(100000, graph_no_hire), incentive, deadline),
-                get_prob_in_range(simulate(100000, graph_no_hire), deadline, 100)]
+    p_no_hire = [prob_menor_igual_cuarenta_no_hire,
+                 prob_cuarenta_cuarentaysiete_no_hire,
+                 prob_mas_cuarentaysiete_no_hire]
    
-    print("Ganancia total:", numpy.dot(matriz_no_hire, p_no_hire))      
+    print("Ganancia total:", numpy.dot(matriz_no_hire, p_no_hire))     
+    print()
 
     # Segundo paso: analizar en el contexto que se hace la contratacion.
     # Esto lo representamos modificando la duracion de las tarea 2.
@@ -193,24 +205,34 @@ def main():
     graph_hire.dist_params[2] = (6.0, 9.0, 13.0)
 
     # TODO: simular en este contexto!
-    print()
-    print("Con contratación:")
-    print("Probabilidad  de terminar en la semana 40 o antes: ", get_prob_in_range(simulate(100000, graph_hire), 0, incentive))
-    print("Probabilidad  de terminar entre la semana 40 y 47: ", get_prob_in_range(simulate(100000, graph_hire), incentive, deadline))
-    print("Probabilidad  de terminar luego de la semana 47: ", get_prob_in_range(simulate(100000, graph_hire), deadline, 100))
-
+    simulacion_hire = simulate(1000, graph_hire)
+    
+    # Grafico de la distribucion de las simulaciones:
+    plt.hist(simulacion_hire,density=True, color = "grey")
+    plt.xlabel("Con contratación")
+    plt.show()
     
     # TODO: Analizar los resultados.
     # Tabla de pagos con contrataciones:
+    prob_menor_igual_cuarenta_hire = get_prob_in_range(simulacion_hire, 0, incentive)
+    prob_cuarenta_cuarentaysiete_hire = get_prob_in_range(simulacion_hire, incentive, deadline)
+    prob_mas_cuarentaysiete_hire = get_prob_in_range(simulacion_hire, deadline, 100)
+    
+    print("Con contratación:")
+    print("Probabilidad  de terminar en la semana 40 o antes: ", prob_menor_igual_cuarenta_hire)
+    print("Probabilidad  de terminar entre la semana 40 y 47: ", prob_cuarenta_cuarentaysiete_hire)
+    print("Probabilidad  de terminar luego de la semana 47: ", prob_mas_cuarentaysiete_hire)
+
     matriz_hire = [(ganancia + incentivo + inversion), (ganancia + inversion), (ganancia + penalizacion + inversion)]
         
-    p_hire = [get_prob_in_range(simulate(100000, graph_hire), 0, incentive),
-                 get_prob_in_range(simulate(100000, graph_hire), incentive, deadline),
-                 get_prob_in_range(simulate(100000, graph_hire), deadline, 100)]
+    p_hire = [prob_menor_igual_cuarenta_hire,
+              prob_cuarenta_cuarentaysiete_hire,
+              prob_mas_cuarentaysiete_hire]
     
     print("Ganancia total:", numpy.dot(matriz_hire, p_hire))   
+    print()
 
-    # Resultado final
+    # Resultado final: Decisión
     if numpy.dot(matriz_no_hire, p_no_hire) > numpy.dot(matriz_hire, p_hire):
         print("Alternativa elegida: No contratar")
     else:
